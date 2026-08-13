@@ -1,0 +1,12 @@
+# Simulated hardware-noise robustness (mixed-state simulator, slower runs).
+# Trimmed for the Aug 15 deadline: two channel strengths. 40 runs.
+base: configs/base.yaml
+fixed:
+  experiment.name: qnoise
+  data.n_samples: 10000
+  model.type: hybrid
+  model.quantum.device: default.mixed
+axes:
+  experiment.seed: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  model.quantum.noise.type: [depolarizing, amplitude_damping]
+  model.quantum.noise.p: [0.01, 0.05]

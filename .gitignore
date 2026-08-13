@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+logs/
+paper_assets/
+manifest*.txt
+data/*.csv

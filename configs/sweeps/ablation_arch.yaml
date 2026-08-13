@@ -1,0 +1,12 @@
+# Architecture ablation: qubits x layers x embedding, hybrid only.
+# Trimmed for the Aug 15 deadline: 5 seeds, L in {1,2,3}. 90 runs.
+base: configs/base.yaml
+fixed:
+  experiment.name: ablation_arch
+  data.n_samples: 10000
+  model.type: hybrid
+axes:
+  experiment.seed: [0, 1, 2, 3, 4]
+  model.quantum.n_qubits: [2, 3, 4]
+  model.quantum.n_layers: [1, 2, 3]
+  model.quantum.embedding: [amplitude, angle]

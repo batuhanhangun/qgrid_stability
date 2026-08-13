@@ -1,0 +1,307 @@
+{
+  "run_id": "main_random_forest_n10000_seed12",
+  "timestamp": "2026-08-10T15:54:04.651938",
+  "config": {
+    "experiment": {
+      "name": "main",
+      "seed": 12,
+      "output_dir": "results"
+    },
+    "data": {
+      "csv_path": "data/grid_stability.csv",
+      "n_samples": 10000,
+      "test_size": 0.2,
+      "stratify": true,
+      "standardize": true
+    },
+    "model": {
+      "type": "random_forest",
+      "encoder": {
+        "hidden_dim": 32,
+        "dropout": 0.2,
+        "layer_norm": true
+      },
+      "quantum": {
+        "n_qubits": 3,
+        "n_layers": 2,
+        "embedding": "amplitude",
+        "entangler": "ring",
+        "noise": {
+          "type": "none",
+          "p": 0.0
+        },
+        "device": "default.qubit",
+        "diff_method": "best"
+      }
+    },
+    "training": {
+      "epochs": 60,
+      "batch_size": 64,
+      "lr": 0.005,
+      "lr_decay_factor": 0.5,
+      "lr_decay_every": 20,
+      "loss": "cross_entropy"
+    },
+    "evaluation": {
+      "input_noise": {
+        "gaussian_sigma": [
+          0.05,
+          0.1,
+          0.2,
+          0.3
+        ],
+        "uniform_width": [
+          0.05,
+          0.1,
+          0.2,
+          0.3
+        ],
+        "dropout_p": [
+          0.05,
+          0.1,
+          0.15,
+          0.2
+        ]
+      },
+      "metrics": [
+        "accuracy",
+        "f1",
+        "precision",
+        "recall",
+        "roc_auc"
+      ]
+    }
+  },
+  "params": null,
+  "history": null,
+  "clean": {
+    "accuracy": 0.9195,
+    "f1": 0.9378138277327154,
+    "precision": 0.9246001523229246,
+    "recall": 0.95141065830721,
+    "roc_auc": 0.9805038622075201,
+    "confusion_matrix": [
+      [
+        625,
+        99
+      ],
+      [
+        62,
+        1214
+      ]
+    ]
+  },
+  "input_noise": {
+    "gaussian": {
+      "0.05": {
+        "accuracy": 0.919,
+        "f1": 0.9371605896043445,
+        "precision": 0.9278033794162827,
+        "recall": 0.9467084639498433,
+        "roc_auc": 0.9807836774104158,
+        "confusion_matrix": [
+          [
+            630,
+            94
+          ],
+          [
+            68,
+            1208
+          ]
+        ]
+      },
+      "0.1": {
+        "accuracy": 0.9105,
+        "f1": 0.9306470360325455,
+        "precision": 0.9203065134099617,
+        "recall": 0.9412225705329154,
+        "roc_auc": 0.974081102028092,
+        "confusion_matrix": [
+          [
+            620,
+            104
+          ],
+          [
+            75,
+            1201
+          ]
+        ]
+      },
+      "0.2": {
+        "accuracy": 0.9,
+        "f1": 0.9232540291634689,
+        "precision": 0.9045112781954887,
+        "recall": 0.9427899686520376,
+        "roc_auc": 0.961557071476818,
+        "confusion_matrix": [
+          [
+            597,
+            127
+          ],
+          [
+            73,
+            1203
+          ]
+        ]
+      },
+      "0.3": {
+        "accuracy": 0.875,
+        "f1": 0.9039200614911607,
+        "precision": 0.8868778280542986,
+        "recall": 0.9216300940438872,
+        "roc_auc": 0.9446712793778902,
+        "confusion_matrix": [
+          [
+            574,
+            150
+          ],
+          [
+            100,
+            1176
+          ]
+        ]
+      }
+    },
+    "uniform": {
+      "0.05": {
+        "accuracy": 0.922,
+        "f1": 0.9397683397683397,
+        "precision": 0.926179604261796,
+        "recall": 0.9537617554858934,
+        "roc_auc": 0.9792395521224823,
+        "confusion_matrix": [
+          [
+            627,
+            97
+          ],
+          [
+            59,
+            1217
+          ]
+        ]
+      },
+      "0.1": {
+        "accuracy": 0.918,
+        "f1": 0.9365325077399381,
+        "precision": 0.9250764525993884,
+        "recall": 0.9482758620689655,
+        "roc_auc": 0.9780407307019519,
+        "confusion_matrix": [
+          [
+            626,
+            98
+          ],
+          [
+            66,
+            1210
+          ]
+        ]
+      },
+      "0.2": {
+        "accuracy": 0.9155,
+        "f1": 0.9347238315952106,
+        "precision": 0.9215536938309216,
+        "recall": 0.9482758620689655,
+        "roc_auc": 0.975919114463361,
+        "confusion_matrix": [
+          [
+            621,
+            103
+          ],
+          [
+            66,
+            1210
+          ]
+        ]
+      },
+      "0.3": {
+        "accuracy": 0.9055,
+        "f1": 0.9266589057043073,
+        "precision": 0.9177555726364335,
+        "recall": 0.9357366771159875,
+        "roc_auc": 0.9678115095516029,
+        "confusion_matrix": [
+          [
+            617,
+            107
+          ],
+          [
+            82,
+            1194
+          ]
+        ]
+      }
+    },
+    "dropout": {
+      "0.05": {
+        "accuracy": 0.9085,
+        "f1": 0.9299655568312285,
+        "precision": 0.9087509349289454,
+        "recall": 0.9521943573667712,
+        "roc_auc": 0.9653418833024472,
+        "confusion_matrix": [
+          [
+            602,
+            122
+          ],
+          [
+            61,
+            1215
+          ]
+        ]
+      },
+      "0.1": {
+        "accuracy": 0.873,
+        "f1": 0.9041509433962264,
+        "precision": 0.8719068413391557,
+        "recall": 0.9388714733542319,
+        "roc_auc": 0.9312309487521433,
+        "confusion_matrix": [
+          [
+            548,
+            176
+          ],
+          [
+            78,
+            1198
+          ]
+        ]
+      },
+      "0.15": {
+        "accuracy": 0.85,
+        "f1": 0.8892171344165436,
+        "precision": 0.840782122905028,
+        "recall": 0.9435736677115988,
+        "roc_auc": 0.9073270449782643,
+        "confusion_matrix": [
+          [
+            496,
+            228
+          ],
+          [
+            72,
+            1204
+          ]
+        ]
+      },
+      "0.2": {
+        "accuracy": 0.8385,
+        "f1": 0.8805914972273567,
+        "precision": 0.8334499650104968,
+        "recall": 0.9333855799373041,
+        "roc_auc": 0.895663026723705,
+        "confusion_matrix": [
+          [
+            486,
+            238
+          ],
+          [
+            85,
+            1191
+          ]
+        ]
+      }
+    }
+  },
+  "wall_time_sec": 2.2691333293914795
+}

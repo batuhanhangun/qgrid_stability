@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this code or the accompanying results, please cite the paper below."
+title: "qgrid_stability: Noise-Resilient Hybrid Quantum-Classical Learning for Smart Grid Stability"
+authors:
+  - family-names: Hangun
+    given-names: Batuhan
+  - family-names: Altun
+    given-names: Oguz
+  - family-names: Eyecioglu
+    given-names: Onder
+preferred-citation:
+  type: article
+  title: "Noise-Resilient Hybrid Quantum-Classical Learning for Smart Grid Stability: A Systematic Study of Architecture, Embedding, and Robustness"
+  authors:
+    - family-names: Hangun
+      given-names: Batuhan
+    - family-names: Altun
+      given-names: Oguz
+    - family-names: Eyecioglu
+      given-names: Onder
+  journal: "SN Computer Science"
+  year: 2026
+  notes: "Submitted; citation details to be updated upon publication."

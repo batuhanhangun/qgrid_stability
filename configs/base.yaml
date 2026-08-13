@@ -1,0 +1,48 @@
+# Base configuration: reproduces the DCAS 2026 setting as the default.
+# Every sweep overrides a subset of these keys.
+
+experiment:
+  name: baseline_dcas
+  seed: 0                # overridden per run by the sweep generator
+  output_dir: results
+
+data:
+  csv_path: data/grid_stability.csv   # UCI Electrical Grid Stability Simulated Data
+  n_samples: 2000        # 2000 = DCAS subset; set to 10000 (or null) for full dataset
+  test_size: 0.2
+  stratify: true
+  standardize: true
+
+model:
+  type: hybrid           # hybrid | classical_nn | gradient_boosting | random_forest | xgboost | svm
+  encoder:
+    hidden_dim: 32
+    dropout: 0.2
+    layer_norm: true
+  quantum:
+    n_qubits: 3          # ablation axis: 2, 3, 4
+    n_layers: 2          # ablation axis: 1, 2, 3, 4
+    embedding: amplitude # ablation axis: amplitude | angle
+    entangler: ring      # ring CNOT topology
+    # Simulated hardware noise (requires default.mixed device). type: none disables.
+    noise:
+      type: none         # none | depolarizing | amplitude_damping
+      p: 0.0             # channel strength; sweep e.g. [0.01, 0.05, 0.1]
+    device: default.qubit  # default.qubit | default.mixed | lightning.qubit
+    diff_method: best
+
+training:
+  epochs: 60
+  batch_size: 64
+  lr: 0.005
+  lr_decay_factor: 0.5
+  lr_decay_every: 20
+  loss: cross_entropy
+
+evaluation:
+  # Input-level noise robustness (applied to standardized test features)
+  input_noise:
+    gaussian_sigma: [0.05, 0.10, 0.20, 0.30]
+    uniform_width:  [0.05, 0.10, 0.20, 0.30]
+    dropout_p:      [0.05, 0.10, 0.15, 0.20]
+  metrics: [accuracy, f1, precision, recall, roc_auc]
