@@ -18,12 +18,13 @@ from .quantum import make_qnode, input_dim_for, n_quantum_params
 
 
 def build_encoder(in_dim: int, hidden_dim: int, out_dim: int,
-                  dropout: float, layer_norm: bool) -> nn.Sequential:
+                  dropout: float, layer_norm: bool,
+                  output_layer_norm: bool = True) -> nn.Sequential:
     layers: list[nn.Module] = [nn.Linear(in_dim, hidden_dim)]
     if layer_norm:
         layers.append(nn.LayerNorm(hidden_dim))
     layers += [nn.ReLU(), nn.Dropout(dropout), nn.Linear(hidden_dim, out_dim)]
-    if layer_norm:
+    if layer_norm and output_layer_norm:
         layers.append(nn.LayerNorm(out_dim))
     layers.append(nn.Tanh())
     return nn.Sequential(*layers)
@@ -38,7 +39,8 @@ class HybridQNN(nn.Module):
         q_in = input_dim_for(qcfg["embedding"], self.n_qubits)
 
         self.encoder = build_encoder(in_features, ecfg["hidden_dim"], q_in,
-                                     ecfg["dropout"], ecfg["layer_norm"])
+                                     ecfg["dropout"], ecfg["layer_norm"],
+                                     ecfg.get("output_layer_norm", True))
 
         qnode, weight_shapes = make_qnode(
             n_qubits=qcfg["n_qubits"],
@@ -77,7 +79,8 @@ class MatchedClassicalNN(nn.Module):
         q_in = input_dim_for(qcfg["embedding"], n_qubits)
 
         self.encoder = build_encoder(in_features, ecfg["hidden_dim"], q_in,
-                                     ecfg["dropout"], ecfg["layer_norm"])
+                                     ecfg["dropout"], ecfg["layer_norm"],
+                                     ecfg.get("output_layer_norm", True))
         self.bottleneck = nn.Sequential(
             nn.Linear(q_in, n_qubits, bias=False),
             nn.Tanh(),

@@ -1,8 +1,0 @@
-# Continuity check with DCAS 2026: same 2,000-sample subset protocol.
-base: configs/base.yaml
-fixed:
-  experiment.name: subset2k
-  data.n_samples: 2000
-axes:
-  experiment.seed: [0,1,2,3,4,5,6,7,8,9]
-  model.type: [hybrid, classical_nn]

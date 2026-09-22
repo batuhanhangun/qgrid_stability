@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """Generate the full experiment manifest (cross product of sweep axes).
 
-Emits one command line per run into a manifest file, which is either executed
-locally in sequence or consumed by a SLURM array job (slurm/perlmutter_array.sh
-runs line $SLURM_ARRAY_TASK_ID of the manifest).
+Emits one command line per run into a manifest file. Runs are independent:
+execute the manifest sequentially, or distribute its lines over several
+processes or machines.
 
 Usage:
     python scripts/run_sweep.py --sweep configs/sweeps/main.yaml \
@@ -33,12 +33,17 @@ def expand(sweep: dict) -> list[list[str]]:
     fixed = sweep.get("fixed", {})
     keys = list(axes.keys())
     combos = itertools.product(*(axes[k] for k in keys)) if keys else [()]
+    # Optional explicit list of per-run override dicts (crossed with axes);
+    # sweeps without a `runs` key expand exactly as before.
+    explicit = sweep.get("runs") or [{}]
 
     runs = []
     for combo in combos:
-        sets = [f"{k}={v}" for k, v in fixed.items()]
-        sets += [f"{k}={v}" for k, v in zip(keys, combo)]
-        runs.append(sets)
+        for extra in explicit:
+            sets = [f"{k}={v}" for k, v in fixed.items()]
+            sets += [f"{k}={v}" for k, v in extra.items()]
+            sets += [f"{k}={v}" for k, v in zip(keys, combo)]
+            runs.append(sets)
     return runs
 
 
@@ -69,8 +74,6 @@ def main():
         with open(args.manifest, "w") as f:
             f.write("\n".join(cmds) + "\n")
         print(f"Wrote {len(cmds)} runs to {args.manifest}")
-        print("Submit with: sbatch --array=1-"
-              f"{len(cmds)} slurm/perlmutter_array.sh {args.manifest}")
 
 
 if __name__ == "__main__":

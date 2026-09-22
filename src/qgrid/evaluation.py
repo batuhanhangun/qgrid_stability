@@ -21,6 +21,27 @@ def predict_torch(model, X: np.ndarray, batch_size: int = 256) -> tuple[np.ndarr
     return probs.argmax(1), probs[:, 1]
 
 
+def dump_activations(model, X: np.ndarray, y: np.ndarray, path: str,
+                     batch_size: int = 256) -> str:
+    """Save encoder outputs, bottleneck outputs (VQC <Z> expectations or the
+    classical bottleneck activations), decoder logits and labels to an .npz."""
+    import torch
+    model.eval()
+    bottleneck = model.vqc if hasattr(model, "vqc") else model.bottleneck
+    enc, bot, logit = [], [], []
+    with torch.no_grad():
+        for i in range(0, len(X), batch_size):
+            xb = torch.tensor(X[i:i + batch_size], dtype=torch.float32)
+            z = model.encoder(xb)
+            q = bottleneck(z)
+            enc.append(z.numpy())
+            bot.append(q.numpy())
+            logit.append(model.decoder(q).numpy())
+    np.savez(path, encoder=np.concatenate(enc), bottleneck=np.concatenate(bot),
+             logits=np.concatenate(logit), labels=np.asarray(y))
+    return path
+
+
 def compute_metrics(y_true, y_pred, y_score) -> dict:
     return {
         "accuracy": float(accuracy_score(y_true, y_pred)),

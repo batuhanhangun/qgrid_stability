@@ -1,0 +1,20 @@
+# Mismatched train/eval channel noise. Hybrid default architecture, full dataset,
+# 10 seeds x 7 (train, eval) conditions = 70 runs.
+# Training uses model.quantum.noise; evaluation goes through a second model
+# built with model.quantum.eval_noise carrying the trained weights.
+base: configs/base.yaml
+fixed:
+  experiment.name: noisematrix
+  data.n_samples: 10000
+  model.type: hybrid
+  model.quantum.device: default.mixed
+runs:
+  - {model.quantum.noise.type: none,              model.quantum.noise.p: 0.0,  model.quantum.eval_noise.type: none,              model.quantum.eval_noise.p: 0.0}
+  - {model.quantum.noise.type: none,              model.quantum.noise.p: 0.0,  model.quantum.eval_noise.type: depolarizing,      model.quantum.eval_noise.p: 0.05}
+  - {model.quantum.noise.type: none,              model.quantum.noise.p: 0.0,  model.quantum.eval_noise.type: amplitude_damping, model.quantum.eval_noise.p: 0.05}
+  - {model.quantum.noise.type: depolarizing,      model.quantum.noise.p: 0.05, model.quantum.eval_noise.type: depolarizing,      model.quantum.eval_noise.p: 0.05}
+  - {model.quantum.noise.type: depolarizing,      model.quantum.noise.p: 0.05, model.quantum.eval_noise.type: amplitude_damping, model.quantum.eval_noise.p: 0.05}
+  - {model.quantum.noise.type: amplitude_damping, model.quantum.noise.p: 0.05, model.quantum.eval_noise.type: depolarizing,      model.quantum.eval_noise.p: 0.05}
+  - {model.quantum.noise.type: amplitude_damping, model.quantum.noise.p: 0.05, model.quantum.eval_noise.type: amplitude_damping, model.quantum.eval_noise.p: 0.05}
+axes:
+  experiment.seed: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]

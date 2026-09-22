@@ -1,0 +1,8 @@
+# Main result: hybrid vs classical NN vs baselines, full dataset, 30 seeds. 180 runs.
+base: configs/base.yaml
+fixed:
+  experiment.name: main
+  data.n_samples: 10000
+axes:
+  experiment.seed: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29]
+  model.type: [hybrid, classical_nn, gradient_boosting, random_forest, xgboost, svm]

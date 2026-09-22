@@ -4,8 +4,7 @@ The dataset (Electrical Grid Stability Simulated Data, UCI ML Repository id=471)
 has 10,000 rows, 12 predictive features (tau1-4, p1-4, g1-4), a continuous
 target `stab` and a binary label `stabf` (stable/unstable). We use `stabf`.
 
-Compute nodes on Perlmutter may lack internet access, so this module
-only reads a local CSV. Use scripts/download_data.py on a login node first.
+This module only reads a local CSV; run scripts/download_data.py first.
 """
 from __future__ import annotations
 

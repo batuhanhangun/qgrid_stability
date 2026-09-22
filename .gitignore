@@ -1,7 +1,6 @@
+runs/
+paper_assets/
+data/*.csv
+manifest*.txt
 __pycache__/
 *.pyc
-.venv/
-logs/
-paper_assets/
-manifest*.txt
-data/*.csv

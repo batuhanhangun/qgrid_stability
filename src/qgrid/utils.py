@@ -48,9 +48,28 @@ def run_id(cfg: dict) -> str:
         parts += [f"q{q['n_qubits']}", f"l{q['n_layers']}", q["embedding"]]
         if q.get("noise", {}).get("type", "none") != "none":
             parts += [q["noise"]["type"], f"p{q['noise']['p']}"]
+        # Mismatched train/eval channel noise (revision); absent by default.
+        ev = q.get("eval_noise", {})
+        if ev.get("type", "none") != "none":
+            parts += ["eval", ev["type"], f"p{ev['p']}"]
     parts += [f"n{cfg['data']['n_samples'] or 'full'}",
               f"seed{cfg['experiment']['seed']}"]
     return "_".join(str(p) for p in parts)
+
+
+def env_info() -> dict:
+    """Interpreter and package versions, for the result.json `env` block."""
+    import platform
+    from importlib import metadata
+    out = {"python": platform.python_version()}
+    for name, dist in [("pennylane", "pennylane"), ("torch", "torch"),
+                       ("sklearn", "scikit-learn"), ("xgboost", "xgboost"),
+                       ("numpy", "numpy"), ("scipy", "scipy")]:
+        try:
+            out[name] = metadata.version(dist)
+        except metadata.PackageNotFoundError:
+            out[name] = None
+    return out
 
 
 def save_result(cfg: dict, payload: dict):

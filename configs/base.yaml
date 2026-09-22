@@ -4,7 +4,10 @@
 experiment:
   name: baseline_dcas
   seed: 0                # overridden per run by the sweep generator
-  output_dir: results
+  output_dir: runs
+  # Optional diagnostics (off by default; no effect on results).
+  log_grad_norms: false  # per-epoch mean L2 grad norm per parameter group
+  dump_activations: false  # save test-split activations as activations.npz
 
 data:
   csv_path: data/grid_stability.csv   # UCI Electrical Grid Stability Simulated Data
@@ -19,6 +22,7 @@ model:
     hidden_dim: 32
     dropout: 0.2
     layer_norm: true
+    output_layer_norm: true  # false: drop the LayerNorm on the encoder output (786 -> 770 params)
   quantum:
     n_qubits: 3          # ablation axis: 2, 3, 4
     n_layers: 2          # ablation axis: 1, 2, 3, 4
@@ -28,6 +32,12 @@ model:
     noise:
       type: none         # none | depolarizing | amplitude_damping
       p: 0.0             # channel strength; sweep e.g. [0.01, 0.05, 0.1]
+    # Evaluation-time channel noise (mismatched train/eval condition). Training
+    # always uses `noise`; when eval_noise.type != none the trained weights are
+    # copied into a second model built with eval_noise and evaluated there.
+    eval_noise:
+      type: none
+      p: 0.0
     device: default.qubit  # default.qubit | default.mixed | lightning.qubit
     diff_method: best
 

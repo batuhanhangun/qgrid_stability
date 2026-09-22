@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 """Download the UCI Electrical Grid Stability Simulated Data (dataset 471).
 
-Uses only stdlib + pandas (no ucimlrepo), so it runs in any environment,
-including inside the quantum_ml container. Run on a Perlmutter LOGIN node
-(compute nodes have no internet):
+Uses only stdlib + pandas (no ucimlrepo):
 
-    podman-hpc run --rm -v $PWD:/work -w /work quantum_ml:v4 \
-        python scripts/download_data.py
+    python scripts/download_data.py
 
 Writes data/grid_stability.csv with columns tau1-4, p1-4, g1-4, stab, stabf.
 """

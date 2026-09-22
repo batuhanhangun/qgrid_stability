@@ -5,20 +5,23 @@ Usage:
     python scripts/run_experiment.py --config configs/base.yaml \
         --set experiment.seed=3 model.quantum.n_qubits=4
 
-Every run writes results/<run_id>/result.json containing config, parameter
-counts, training history, clean metrics, and input-noise robustness metrics.
-Aggregation across runs is done separately (scripts/aggregate_results.py).
+Every run writes <output_dir>/<run_id>/result.json containing config,
+parameter counts, training history, clean metrics, and input-noise robustness
+metrics. Tables and figures are produced from these files by
+scripts/make_tables.py and scripts/make_figures.py.
 """
 from __future__ import annotations
 
 import argparse
+import copy
+import os
 import sys
 import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from qgrid.utils import load_config, save_result, run_id  # noqa: E402
+from qgrid.utils import load_config, save_result, run_id, env_info  # noqa: E402
 from qgrid.data import load_dataset  # noqa: E402
 
 
@@ -47,6 +50,8 @@ def main():
           flush=True)
 
     model_type = cfg["model"]["type"]
+    exp = cfg["experiment"]
+    out_dir = os.path.join(exp["output_dir"], run_id(cfg))
     t0 = time.time()
 
     if model_type in ("hybrid", "classical_nn"):
@@ -67,14 +72,50 @@ def main():
             split.X_train, split.y_train, split.X_test, split.y_test,
             cfg["training"]["batch_size"])
         history = train_model(model, train_loader, val_loader,
-                              cfg["training"])
+                              cfg["training"],
+                              log_grad_norms=exp.get("log_grad_norms", False))
 
-        predict_fn = lambda X: predict_torch(model, X)  # noqa: E731
+        # Mismatched train/eval channel noise (revision): evaluate through a
+        # second model built with eval_noise, carrying the trained weights.
+        train_noise = dict(cfg["model"]["quantum"].get("noise",
+                                                       {"type": "none", "p": 0.0}))
+        eval_noise = cfg["model"]["quantum"].get("eval_noise", {"type": "none"})
+        eval_model = model
+        if eval_noise.get("type", "none") != "none":
+            if model_type != "hybrid":
+                raise ValueError("eval_noise is only meaningful for model.type=hybrid")
+            eval_mcfg = copy.deepcopy(cfg["model"])
+            eval_mcfg["quantum"]["noise"] = dict(eval_noise)
+            eval_model = HybridQNN(eval_mcfg)
+            sd, sd_eval = model.state_dict(), eval_model.state_dict()
+            if list(sd) != list(sd_eval) or any(
+                    sd[k].shape != sd_eval[k].shape for k in sd):
+                raise RuntimeError(
+                    f"state_dict mismatch between train and eval models: "
+                    f"{[(k, tuple(v.shape)) for k, v in sd.items()]} vs "
+                    f"{[(k, tuple(v.shape)) for k, v in sd_eval.items()]}")
+            eval_model.load_state_dict(sd, strict=True)
+            print(f"[qgrid] eval model: noise={eval_noise}", flush=True)
+        noise_condition = {
+            "train": train_noise,
+            "eval": dict(eval_noise) if eval_noise.get("type", "none") != "none"
+            else train_noise,
+        }
+
+        predict_fn = lambda X: predict_torch(eval_model, X)  # noqa: E731
         clean = evaluate_clean(predict_fn, split.X_test, split.y_test)
         noise = evaluate_input_noise(predict_fn, split.X_test, split.y_test,
                                      cfg["evaluation"]["input_noise"], seed)
         payload = {"params": params, "history": history,
-                   "clean": clean, "input_noise": noise}
+                   "clean": clean, "input_noise": noise,
+                   "noise_condition": noise_condition}
+
+        if exp.get("dump_activations", False):
+            from qgrid.evaluation import dump_activations
+            os.makedirs(out_dir, exist_ok=True)
+            p = dump_activations(eval_model, split.X_test, split.y_test,
+                                 os.path.join(out_dir, "activations.npz"))
+            print(f"[qgrid] saved: {p}", flush=True)
 
     else:
         from qgrid.models.baselines import build_sklearn_baseline
@@ -96,6 +137,7 @@ def main():
                    "clean": clean, "input_noise": noise}
 
     payload["wall_time_sec"] = time.time() - t0
+    payload["env"] = env_info()
     path = save_result(cfg, payload)
     print(f"[qgrid] clean accuracy: {payload['clean']['accuracy']:.4f}")
     print(f"[qgrid] saved: {path}", flush=True)

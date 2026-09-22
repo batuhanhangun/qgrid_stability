@@ -1,91 +1,67 @@
 # qgrid_stability
 
-Code, per-run results, and analysis for the paper:
+Code and per-run results for the paper *Noise-Resilient Hybrid Quantum-Classical
+Learning for Smart Grid Stability: A Systematic Study of Architecture, Embedding,
+and Robustness* (B. Hangun, O. Altun, O. Eyecioglu, SN Computer Science, 2026;
+see `CITATION.cff`). `results/` holds the 1,430 runs the paper reports, one
+`result.json` per run.
 
-> B. Hangun, O. Altun, O. Eyecioglu, "Noise-Resilient Hybrid Quantum-Classical
-> Learning for Smart Grid Stability: A Systematic Study of Architecture,
-> Embedding, and Robustness," SN Computer Science (submitted, 2026). Extended
-> version of the IEEE DCAS 2026 paper, doi: 10.1109/DCAS69364.2026.11544419.
+## Installation
 
-The study evaluates a hybrid encoder-VQC-decoder architecture for smart grid
-stability classification on the UCI Electrical Grid Stability dataset across
-330 independent runs: a 30-seed main comparison against five classical
-baselines, a reproduction of the conference protocol, an architecture and
-embedding ablation, and a simulated quantum channel noise analysis.
+Python 3.11.
 
-## Repository contents
-
-- `src/qgrid/`: the experimental framework (data, models, training,
-  evaluation, statistics)
-- `configs/`: base configuration and the four sweep definitions that generate
-  all 330 runs
-- `results/`: the complete per-run results (330 `result.json` files) from
-  which every number, table, and figure in the paper derives
-- `scripts/`: single-run entry point, sweep runner, aggregation, and the
-  paper's figure and table generators
-
-## Verify the paper's numbers without running anything
-
-The shipped `results/` directory is the exact output of the experimental
-campaign reported in the paper. To regenerate every table (with all
-statistical tests) and every figure:
-
-```bash
+```
 pip install -r requirements.txt
-python scripts/make_tables.py     # prints tables + Wilcoxon/TOST/Holm stats
-python scripts/make_figures.py    # writes the four paper figures as PDFs
 ```
 
-Outputs are written to `paper_assets/`.
+CPU-only torch is sufficient (`pip install torch --index-url https://download.pytorch.org/whl/cpu`).
 
-## Reproduce the experiments
+## Reproduce the paper's tables and figures from the shipped results
 
-```bash
-pip install -r requirements.txt
-python scripts/download_data.py   # fetches the UCI dataset (id 471)
-
-# Single run (default = the paper's main hybrid configuration):
-python scripts/run_experiment.py --config configs/base.yaml
-
-# Any run group, sequentially (see table below for cost):
-python scripts/run_sweep.py --sweep configs/sweeps/main_30seeds.yaml --execute
+```
+python scripts/download_data.py      # writes data/grid_stability.csv (UCI dataset 471)
+python scripts/make_tables.py        # prints all tables/statistics, writes paper_assets/tables/
+python scripts/make_figures.py       # writes paper_assets/figures/
 ```
 
-| Sweep | Paper section | Runs | Approx. CPU time |
+## Rerun experiments
+
+Runs write to `runs/<run_id>/result.json` (`results/` is never touched).
+
+Single run:
+
+```
+python scripts/run_experiment.py --config configs/base.yaml --set experiment.name=subset2k data.n_samples=2000 model.type=hybrid experiment.seed=0
+```
+
+Sweep (writes a manifest with one command per run, or executes them sequentially):
+
+```
+python scripts/run_sweep.py --sweep configs/sweeps/reproduction.yaml --manifest manifest.txt
+python scripts/run_sweep.py --sweep configs/sweeps/reproduction.yaml --execute
+```
+
+| Sweep file | Paper section | Runs | Single-process CPU time |
 |---|---|---|---|
-| `subset_comparison.yaml` | Sec. 5.1 (reproduction) | 20 | minutes |
-| `main_30seeds.yaml` | Sec. 5.2, 5.4 (main + input noise) | 180 | a few hours |
-| `ablation_arch.yaml` | Sec. 5.3 (ablation) | 90 | 1 to 2 hours |
-| `quantum_noise.yaml` | Sec. 5.5 (channel noise) | 40 | several hours (density-matrix simulation) |
+| `reproduction.yaml` | Table 1 | 20 | ~10 min |
+| `main.yaml` | Tables 2, 7, 8 (baseline); Figures 2, 5 | 180 | ~1.5 h |
+| `channel_noise.yaml` | Table 8; Figure 7 | 40 | ~4 h |
+| `ablation.yaml` | Tables 3, 4, 6; Figures 3, 4 | 540 | ~19 h |
+| `ablation_classical.yaml` | Tables 4, 6 (classical control); Figure 3 | 540 | ~5 h |
+| `mismatched_noise.yaml` | Table 9; Figure 6 | 70 | ~6 h |
+| `parameter_control.yaml` | Table 1 (770/776-parameter rows) | 20 | ~10 min |
+| `probes.yaml` | Table 5 | 20 | ~30 min |
 
-Every run writes `results/<run_id>/result.json` containing the configuration,
-parameter counts, training history, clean metrics, and the full input-noise
-evaluation. Runs are independent and can be parallelized freely; any
-scheduler or a simple process pool works, since each manifest line from
-`run_sweep.py` is a self-contained command.
+Runs are independent: the lines of the manifest written by `run_sweep.py` can
+be executed in parallel across processes or machines.
 
-Aggregate and compare across seeds:
+## Analyse your own reruns
 
-```bash
-python scripts/aggregate_results.py --results results --metric accuracy
-python scripts/aggregate_results.py --results results --compare hybrid_q3_l2_amplitude_n10000 classical_nn_q3_l2_amplitude_n10000
+```
+python scripts/make_tables.py --results runs
+python scripts/make_figures.py --results runs
 ```
 
-## Environment
+## License
 
-The results in `results/` were produced with PennyLane 0.44, PyTorch 2.5.1,
-scikit-learn, and XGBoost on CPU (containerized runs on NERSC Perlmutter CPU
-nodes; the code has no HPC dependencies and runs identically on a laptop).
-Exact per-run library behavior can differ slightly across platforms and
-versions through RNG streams; the paper's statistical protocol (30 paired
-seeds) is designed to make conclusions insensitive to this.
-
-Seed semantics: the run seed controls the train/test split, weight
-initialization, batch shuffling, and all noise draws. The 2,000-sample subset
-used by the reproduction experiments is selected once with a fixed seed, so
-all runs share identical subset membership.
-
-## License and citation
-
-MIT (see `LICENSE`). If you use this code or the results, please cite the
-paper (see `CITATION.cff`).
+MIT, see `LICENSE`.
